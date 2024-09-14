@@ -12,8 +12,7 @@ pipeline {
     stage('Build Docker Images') {
       steps {
         script {
-          // Build the WordPress Docker image
-          docker.build('wordpress', './wordpress')
+          docker.build('wordpress', './var/lib/jenkins/workspace/wordpress-deployment')
         }
       }
     }
@@ -21,7 +20,6 @@ pipeline {
     stage('Deploy Locally') {
       steps {
         script {
-          // Use Docker Compose to start the containers
           sh 'docker-compose up -d'
         }
       }
@@ -30,8 +28,8 @@ pipeline {
     stage('Test') {
       steps {
         script {
-          // Test WordPress deployment
-          sh 'curl -I http://localhost:8081'
+           sh 'sleep 30'  // Wait for 30 seconds
+           sh 'curl -I http://localhost:8081'
         }
       }
     }
@@ -39,11 +37,7 @@ pipeline {
 
   post {
     always {
-      steps {
-        // Example post-build steps
-        echo 'Pipeline execution completed.'
-        // Additional cleanup or notifications can be added here
-      }
+      echo 'Pipeline execution completed.'
     }
   }
 }
