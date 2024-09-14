@@ -1,44 +1,51 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    DB_HOST = 'wordpress-db.c1sjzy9x15vz.ap-south-1.rds.amazonaws.com:3306'
-    DB_USER = 'wordpress_user'
-    DB_PASSWORD = 'wordpress_password'
-    DB_NAME = 'wordpress_db'
-  }
+    environment {
+        DB_HOST = credentials('db-host')
+        DB_USER = credentials('db-user')
+        DB_PASSWORD = credentials('db-password')
+        DB_NAME = 'wordpress_db'
+    }
 
-  stages {
-    stage('Build Docker Images') {
-      steps {
-        script {
-          docker.build('wordpress', './var/lib/jenkins/workspace/wordpress-deployment')
+    stages {
+        stage('Load Environment Variables') {
+            steps {
+                script {
+                    def envFile = new File('.env')
+                    envFile.eachLine { line ->
+                        def (key, value) = line.split('=')
+                        env[key] = value
+                    }
+                }
+            }
         }
-      }
-    }
 
-    stage('Deploy Locally') {
-      steps {
-        script {
-          sh 'docker-compose up -d'
+        stage('Build Docker Images') {
+            steps {
+                script {
+                    // Use the Dockerfile path from the environment variable
+                    docker.build('wordpress', "${env.DOCKERFILE_PATH}")
+                }
+            }
         }
-      }
-    }
 
-    stage('Test') {
-      steps {
-        script {
-           sh 'sleep 30'  // Wait for 30 seconds
-           sh 'curl -I http://localhost:8081'
+        stage('Deploy Locally') {
+            steps {
+                script {
+                    sh 'docker-compose up -d'
+                }
+            }
         }
-      }
-    }
-  }
 
-  post {
-    always {
-      echo 'Pipeline execution completed.'
+        stage('Test') {
+            steps {
+                script {
+                    sh 'sleep 30'  // Wait for 30 seconds
+                    sh 'curl -I http://localhost:8081'
+                }
+            }
+        }
     }
-  }
 }
 
