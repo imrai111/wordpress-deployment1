@@ -2,36 +2,47 @@ pipeline {
   agent any
 
   environment {
-    DB_HOST = 'wordpress-db.c1sjzy9x15vz.ap-south-1.rds.amazonaws.com'
+    DB_HOST = 'wordpress-db.c1sjzy9x15vz.ap-south-1.rds.amazonaws.com:3306'
     DB_USER = 'wordpress_user'
     DB_PASSWORD = 'wordpress_password'
-    DB_NAME = 'wordpress-db'
+    DB_NAME = 'wordpress_db'
   }
 
   stages {
     stage('Build Docker Images') {
       steps {
         script {
+          // Build the WordPress Docker image
           docker.build('wordpress', './wordpress')
-          docker.build('mysql', './mysql')
         }
       }
     }
 
- stage('Deploy Locally on EC2') {
-            steps {
-                script {
-                    // Start containers locally on the same EC2 instance
-                    sh 'docker-compose up -d'
-                }
-            }
+    stage('Deploy Locally') {
+      steps {
+        script {
+          // Use Docker Compose to start the containers
+          sh 'docker-compose up -d'
         }
+      }
+    }
 
     stage('Test') {
       steps {
         script {
-          sh 'curl -I http://your-ec2-instance-ip:8080'
+          // Test WordPress deployment
+          sh 'curl -I http://localhost:8081'
         }
+      }
+    }
+  }
+
+  post {
+    always {
+      steps {
+        // Example post-build steps
+        echo 'Pipeline execution completed.'
+        // Additional cleanup or notifications can be added here
       }
     }
   }
