@@ -3,25 +3,32 @@ pipeline {
 
     environment {
         DB_NAME = 'wordpress_db'
-        DOCKERFILE_PATH = '${env.DOCKERFILE_PATH}'
+        DOCKERFILE_PATH = './${env.DOCKERFILE_PATH}'
     }
 
     stages {
         stage('Load Environment Variables') {
             steps {
                 script {
-                    // Use the 'withCredentials' step to securely handle credentials
                     withCredentials([
                         string(credentialsId: 'db-host', variable: 'DB_HOST'),
                         string(credentialsId: 'db-user', variable: 'DB_USER'),
-                        string(credentialsId: 'db-password', variable: 'DB_PASSWORD')
+                        string(credentialsId: 'db-password', variable: 'DB_PASSWORD'),
+                        // Assuming your AWS credentials are stored under one credential ID, such as 'aws-credentials'
+                        string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
+                        string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
                     ]) {
-                        // Print the variables for debugging (avoid printing sensitive values in production)
+                        // Print variables for debugging (avoid printing sensitive info in production)
                         echo "Database Host: ${env.DB_HOST}"
                         echo "Database User: ${env.DB_USER}"
-                        echo "Database Password: ${env.DB_PASSWORD}" // Avoid printing passwords
-                        echo "Database Name: ${env.DB_NAME}"
-                        echo "Dockerfile Path: ${env.DOCKERFILE_PATH}"
+                        echo "AWS Access Key ID: ${env.AWS_ACCESS_KEY_ID}"
+                        
+                        // Example AWS CLI command using the credentials
+                        sh '''
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        aws rds describe-db-instances --region ap-south-1
+                        '''
                     }
                 }
             }
@@ -30,7 +37,6 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 script {
-                    // Use the Dockerfile path from the environment variable
                     docker.build('wordpress', "${env.DOCKERFILE_PATH}")
                 }
             }
@@ -39,7 +45,6 @@ pipeline {
         stage('Deploy Locally') {
             steps {
                 script {
-                    // Use docker-compose to deploy
                     sh 'docker-compose up -d'
                 }
             }
@@ -48,7 +53,7 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    sh 'sleep 30'  // Wait for 30 seconds for the container to be ready
+                    sh 'sleep 30'
                     sh 'curl -I http://localhost:8081'
                 }
             }
