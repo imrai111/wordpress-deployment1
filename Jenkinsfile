@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DB_NAME = 'wordpress_db'
-        DOCKERFILE_PATH = './home/ubuntu/wordpress-deployment1/Dockerfile' // Use static value for Dockerfile path
+        DOCKERFILE_PATH = '${env.DOCKERFILE_PATH}'
     }
 
     stages {
