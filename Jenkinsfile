@@ -12,9 +12,9 @@ pipeline {
                 script {
                     // Use the 'withCredentials' step to securely handle credentials
                     withCredentials([
-                        string(credentialsId: 'db-host-id', variable: 'DB_HOST'),
-                        string(credentialsId: 'db-user-id', variable: 'DB_USER'),
-                        string(credentialsId: 'db-password-id', variable: 'DB_PASSWORD')
+                        string(credentialsId: 'db-host', variable: 'DB_HOST'),
+                        string(credentialsId: 'db-user', variable: 'DB_USER'),
+                        string(credentialsId: 'db-password', variable: 'DB_PASSWORD')
                     ]) {
                         // Print the variables for debugging (avoid printing sensitive values in production)
                         echo "Database Host: ${env.DB_HOST}"
